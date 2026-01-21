@@ -1,7 +1,8 @@
 import numpy as np
 from scipy.stats import skew
+from abc import ABC, abstractmethod
 
-class StudentPerformanceAnalyzer:
+class StudentPerformanceAnalyzer(ABC):
 
     def __init__(self, studentId: int, testScores: list, maxScores: list):
         self.studentId = studentId
@@ -41,6 +42,10 @@ class StudentPerformanceAnalyzer:
     def _calculateStandardDeviation(self) -> float:
         std = np.std(self.normalizedTestScores)
         return std
+    
+    @abstractmethod
+    def __repr__(self):
+        return "Base class for the core engine"
 
 class ConsistencyAnalyzer(StudentPerformanceAnalyzer):
 
@@ -49,9 +54,6 @@ class ConsistencyAnalyzer(StudentPerformanceAnalyzer):
         self.name = "Consistency Analyzer Engine"
         self.ALPHA = 0.3
         self.BETA = 0.7
-
-    def __repr__(self):
-        return f"Description: {self.name}"
     
     def _calculateVariance(self) -> float:
         variance = np.var(self.normalizedTestScores, ddof=0)
@@ -71,15 +73,15 @@ class ConsistencyAnalyzer(StudentPerformanceAnalyzer):
         consistency = 1 / (1 + self.ALPHA*variance + self.BETA*standardDeviation)
 
         return consistency
+    
+    def __repr__(self):
+        return f"Description: {self.name}"
 
 class StatisticsAnalyzer(StudentPerformanceAnalyzer):
 
     def __init__(self, studentId: int, testScores: list, maxScores: list):
         super().__init__(studentId, testScores, maxScores)
         self.name = "Statistics Analyzer Engine"
-
-    def __repr__(self):
-        return f"Description: {self.name}"
     
     def _calculateMedian(self) -> float:
         median = np.median(self.normalizedTestScores)
@@ -95,15 +97,15 @@ class StatisticsAnalyzer(StudentPerformanceAnalyzer):
 
         return [q1, q3]
     
+    def __repr__(self):
+        return f"Description: {self.name}"
+    
 class DistributionAnalyzer(StudentPerformanceAnalyzer):
 
     def __init__(self, studentId: int, testScores: list, maxScores: list):
         super().__init__(studentId, testScores, maxScores)
         self.name = "Distribution Analyzer Engine"
         self.logarithmBase = 2
-
-    def __repr__(self):
-        return f"Description: {self.name}"
     
     def _calculateShannonEntropy(self) -> float:
         sampleData = self.normalizedTestScores
@@ -120,3 +122,6 @@ class DistributionAnalyzer(StudentPerformanceAnalyzer):
     def _calculateCoefficientOfVariation(self) -> float:
         cv = self._calculateStandardDeviation() / self._calculateMean()
         return cv
+    
+    def __repr__(self):
+        return f"Description: {self.name}"
