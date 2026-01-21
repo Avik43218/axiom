@@ -83,19 +83,16 @@ class StatisticsAnalyzer(StudentPerformanceAnalyzer):
         super().__init__(studentId, testScores, maxScores)
         self.name = "Statistics Analyzer Engine"
     
-    def _calculateMedian(self) -> float:
-        median = np.median(self.normalizedTestScores)
-        return median
-    
     def _checkSkewness(self) -> float:
         skewness = skew(self.normalizedTestScores)
         return skewness
     
     def _calculatePercentiles(self) -> list:
         q1 = np.percentile(self.normalizedTestScores, 25)
+        median = np.percentile(self.normalizedTestScores, 50)
         q3 = np.percentile(self.normalizedTestScores, 75)
 
-        return [q1, q3]
+        return {"q1": q1, "median": median, "q3": q3}
     
     def __repr__(self):
         return f"Description: {self.name}"
