@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 class StudentPerformanceComputeEngine(ABC):
 
     def __init__(self, testScores: list, maxScores: list):
+        self.name = "Basic Compute Engine"
         self.testScores = testScores
         self.maxScores = maxScores
         
@@ -12,6 +13,10 @@ class StudentPerformanceComputeEngine(ABC):
         self.normalizedTestScores = normalizedTestScores
         self.maximumScore = np.max(normalizedTestScores)
         self.minimumScore = np.min(normalizedTestScores)
+
+    @abstractmethod
+    def _engineDescription(self) -> str:
+        return "Base: Basic compute engine"
 
     @staticmethod
     def _normalizeScore(maxScore: int, obtainedScore: int) -> float:
@@ -42,9 +47,8 @@ class StudentPerformanceComputeEngine(ABC):
         std = np.std(self.normalizedTestScores)
         return std
     
-    @abstractmethod
     def __repr__(self):
-        return "Base class for the micro compute engine"
+        return f"{self.__class__.__name__}: {self.name}"
 
 class ConsistencyComputeEngine(StudentPerformanceComputeEngine):
 
@@ -53,6 +57,9 @@ class ConsistencyComputeEngine(StudentPerformanceComputeEngine):
         self.name = "Consistency Compute Engine"
         self.ALPHA = 0.3
         self.BETA = 0.7
+
+    def _engineDescription(self):
+        return "Sub: Consistency Compute Engine"
     
     def _calculateVariance(self) -> float:
         variance = np.var(self.normalizedTestScores, ddof=0)
@@ -77,13 +84,16 @@ class ConsistencyComputeEngine(StudentPerformanceComputeEngine):
             }
     
     def __repr__(self):
-        return f"Description: {self.name}"
+        return f"{self.__class__.__name__}: {self.name}"
 
 class StatisticsComputeEngine(StudentPerformanceComputeEngine):
 
     def __init__(self, testScores: list, maxScores: list):
         super().__init__(testScores, maxScores)
         self.name = "Statistics Compute Engine"
+
+    def _engineDescription(self):
+        return "Sub: Statistics Compute Engine"
     
     def _checkSkewness(self) -> float:
         skewness = skew(self.normalizedTestScores)
@@ -109,7 +119,7 @@ class StatisticsComputeEngine(StudentPerformanceComputeEngine):
         return combinedStats
     
     def __repr__(self):
-        return f"Description: {self.name}"
+        return f"{self.__class__.__name__}: {self.name}"
     
 class DistributionComputeEngine(StudentPerformanceComputeEngine):
 
@@ -117,6 +127,9 @@ class DistributionComputeEngine(StudentPerformanceComputeEngine):
         super().__init__(testScores, maxScores)
         self.name = "Distribution Compute Engine"
         self.logarithmBase = 2
+
+    def _engineDescription(self):
+        return "Sub: Distribution Compute Engine"
     
     def _calculateShannonEntropy(self) -> float:
         sampleData = self.normalizedTestScores
@@ -145,12 +158,14 @@ class DistributionComputeEngine(StudentPerformanceComputeEngine):
         }
     
     def __repr__(self):
-        return f"Description: {self.name}"
+        return f"{self.__class__.__name__}: {self.name}"
 
 
 class ComputeStudentPerformance:
 
     def __init__(self, studentId: int, testScores: list, maxScores: list):
+        self.name = "Compute Engine Wrapper Class"
+
         self.studentId = studentId
         self.testScores = testScores
         self.maxScores = maxScores
@@ -169,4 +184,4 @@ class ComputeStudentPerformance:
         return allScores
     
     def __repr__(self):
-        return "Wrapper class for union of all scores"
+        return f"{self.__class__.__name__}: {self.name}"
