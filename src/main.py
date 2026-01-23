@@ -106,7 +106,9 @@ class DistributionAnalyzer(StudentPerformanceAnalyzer):
     
     def _calculateShannonEntropy(self) -> float:
         sampleData = self.normalizedTestScores
-        probabilities = sampleData[sampleData > 0]
+        filteredData = sampleData[sampleData > 0]
+
+        probabilities = filteredData / np.sum(filteredData)
 
         h = -np.sum(probabilities * np.log2(probabilities))
 
