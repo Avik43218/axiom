@@ -2,10 +2,9 @@ import numpy as np
 from scipy.stats import skew
 from abc import ABC, abstractmethod
 
-class StudentPerformanceAnalyzer(ABC):
+class StudentPerformanceComputeEngine(ABC):
 
-    def __init__(self, studentId: int, testScores: list, maxScores: list):
-        self.studentId = studentId
+    def __init__(self, testScores: list, maxScores: list):
         self.testScores = testScores
         self.maxScores = maxScores
         
@@ -45,13 +44,13 @@ class StudentPerformanceAnalyzer(ABC):
     
     @abstractmethod
     def __repr__(self):
-        return "Base class for the core engine"
+        return "Base class for the micro compute engine"
 
-class ConsistencyAnalyzer(StudentPerformanceAnalyzer):
+class ConsistencyComputeEngine(StudentPerformanceComputeEngine):
 
-    def __init__(self, studentId: int, testScores: list, maxScores: list):
-        super().__init__(studentId, testScores, maxScores)
-        self.name = "Consistency Analyzer Engine"
+    def __init__(self, testScores: list, maxScores: list):
+        super().__init__(testScores, maxScores)
+        self.name = "Consistency Compute Engine"
         self.ALPHA = 0.3
         self.BETA = 0.7
     
@@ -66,42 +65,57 @@ class ConsistencyAnalyzer(StudentPerformanceAnalyzer):
 
         return mad
     
-    def analyzeStudentConsistency(self) -> float:
+    def returnConsistencyScores(self) -> dict:
 
         variance = self._calculateVariance()
         standardDeviation = self._calculateStandardDeviation()
         consistency = 1 / (1 + self.ALPHA*variance + self.BETA*standardDeviation)
 
-        return consistency
+        return {
+            "consistency": consistency,
+            "mad": self._calculateMeanAbsoluteDeviation()
+            }
     
     def __repr__(self):
         return f"Description: {self.name}"
 
-class StatisticsAnalyzer(StudentPerformanceAnalyzer):
+class StatisticsComputeEngine(StudentPerformanceComputeEngine):
 
-    def __init__(self, studentId: int, testScores: list, maxScores: list):
-        super().__init__(studentId, testScores, maxScores)
-        self.name = "Statistics Analyzer Engine"
+    def __init__(self, testScores: list, maxScores: list):
+        super().__init__(testScores, maxScores)
+        self.name = "Statistics Compute Engine"
     
     def _checkSkewness(self) -> float:
         skewness = skew(self.normalizedTestScores)
         return skewness
     
-    def _calculatePercentiles(self) -> list:
+    def _calculatePercentiles(self) -> dict:
         q1 = np.percentile(self.normalizedTestScores, 25)
         median = np.percentile(self.normalizedTestScores, 50)
         q3 = np.percentile(self.normalizedTestScores, 75)
 
         return {"q1": q1, "median": median, "q3": q3}
     
+    def returnStatistics(self) -> dict:
+        coreStats = {
+            "mean": self._calculateMean(),
+            "skewness": self._checkSkewness(),
+            "min": self.minimumScore,
+            "max": self.maximumScore
+        }
+        percentileStats = self._calculatePercentiles()
+        combinedStats = coreStats | percentileStats
+
+        return combinedStats
+    
     def __repr__(self):
         return f"Description: {self.name}"
     
-class DistributionAnalyzer(StudentPerformanceAnalyzer):
+class DistributionComputeEngine(StudentPerformanceComputeEngine):
 
-    def __init__(self, studentId: int, testScores: list, maxScores: list):
-        super().__init__(studentId, testScores, maxScores)
-        self.name = "Distribution Analyzer Engine"
+    def __init__(self, testScores: list, maxScores: list):
+        super().__init__(testScores, maxScores)
+        self.name = "Distribution Compute Engine"
         self.logarithmBase = 2
     
     def _calculateShannonEntropy(self) -> float:
@@ -122,5 +136,37 @@ class DistributionAnalyzer(StudentPerformanceAnalyzer):
         cv = self._calculateStandardDeviation() / self._calculateMean()
         return cv
     
+    def returnDistributionScores(self) -> dict:
+        return {
+            "entropy": self._calculateShannonEntropy(),
+            "range": self._calculateRange(),
+            "cv": self._calculateCoefficientOfVariation(),
+            "std": self._calculateStandardDeviation()
+        }
+    
     def __repr__(self):
         return f"Description: {self.name}"
+
+
+class ComputeStudentPerformance:
+
+    def __init__(self, studentId: int, testScores: list, maxScores: list):
+        self.studentId = studentId
+        self.testScores = testScores
+        self.maxScores = maxScores
+
+        self.consistencyScoresObj = ConsistencyComputeEngine(testScores, maxScores)
+        self.statisticsObj = StatisticsComputeEngine(testScores, maxScores)
+        self.distributionScoresObj = DistributionComputeEngine(testScores, maxScores)
+
+    def compute(self) -> dict:
+        consistencyScores = self.consistencyScoresObj.returnConsistencyScores()
+        statistics = self.statisticsObj.returnStatistics()
+        distributionScores = self.distributionScoresObj.returnDistributionScores()
+
+        allScores = consistencyScores | statistics | distributionScores
+
+        return allScores
+    
+    def __repr__(self):
+        return "Wrapper class for union of all scores"
