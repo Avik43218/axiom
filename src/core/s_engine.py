@@ -1,3 +1,39 @@
+"""
+The core engine responsible for computing **individual student performance** based
+on the marks obtained in previous examinations.
+
+This engine consists of three sub-engines, which are child classes of an  
+Abstract Base Class, with different roles:
+
+--> |Consistency Compute Engine|: For computing the consistency score of the student
+which is essential to know how much consistent the student is
+
+--> |Statistics Compute Engine|: For computing basic statistical parameters, for
+appropriate and unbiased analysis of the student at grassroot level
+
+--> |Distribution Compute Engine|: For computing the marks distribution and checking
+outliers, which is essential for estimating student potential
+
+
+The inner workings of this engine involves two major steps, which are as follows:
+
+1. Since marks records are often messy and inconsistent, the first step is to clean
+them and normalize the scores. This is achieved by checking first whether marks obtained
+are strictly lesser than or equal to maximum marks or not, or whether there is any 
+NaN value or not, after which the marks are normalized on a scale of 10, using the
+formula:
+
+        (obtained_score / maximum_score) * 10.0
+
+2. The next step involves, using the normalized scores to compute some of the most
+widely used statistical parameters such as mean, median, and standard deviation
+to name a few.
+
+All the computed parameters are then returned as a dictionary, by a wrapper class
+which puts all of them at a singular place.
+"""
+
+
 import numpy as np
 from scipy.stats import skew
 from abc import ABC, abstractmethod
