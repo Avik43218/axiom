@@ -33,6 +33,8 @@ Some of them include:
 - Final score validation, comparison and display engine
 - A modern web page for viewing the data efficiently
 
+---
+
 ## License
 
 This project is licensed and maintained under the **GNU General Public License 3.0**.
