@@ -19,7 +19,7 @@ public:
 
     PreprocessRawData(std::string filePath) : rawDataFilePath(filePath) {}
 
-    uint32_t normalizeScalarScore(uint32_t obtainedScore, uint32_t maxScore) {
+    static uint32_t normalizeScalarScore(uint32_t obtainedScore, uint32_t maxScore) {
         if (obtainedScore != obtainedScore) {
             return 0;
         }
@@ -63,6 +63,24 @@ public:
             }
         }
 
+        // Read second row for maximum scores
+        std::getline(file, line);
+        std::stringstream maxScoresStream(line);
+        std::string maxScoreString;
+        std::vector<std::string> metaRow;
+        std::vector<uint32_t> maximumScores;
+
+        while (std::getline(maxScoresStream, maxScoreString, ',')) {
+            metaRow.push_back(maxScoreString);
+        }
+
+        for (size_t j : selectedIndices) {
+            if (j == 0 || j >= metaRow.size()) continue;
+
+            uint32_t individualMaxScore = static_cast<uint32_t>(std::stoul(metaRow[j]));
+            maximumScores.push_back(individualMaxScore);
+        }
+
         // Read data rows
         while (std::getline(file, line)) {
             if (!line.empty() && line.back() == '\r') line.pop_back();
@@ -83,8 +101,9 @@ public:
             for (size_t i : selectedIndices) {
                 if (i == 0 || i >= row.size()) continue;
 
-                uint32_t value = static_cast<uint32_t>(std::stoul(row[i]));
-                result.normalizedScores.push_back(normalizationFn(value));
+                uint32_t obtained = static_cast<uint32_t>(std::stoul(row[i]));
+                uint32_t maximum = maximumScores[i];
+                result.normalizedScores.push_back(normalizationFn(obtained, maximum));
             }
 
             results.push_back(std::move(result));
