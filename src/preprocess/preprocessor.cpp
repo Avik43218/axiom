@@ -20,7 +20,16 @@ public:
     PreprocessRawData(std::string filePath) : rawDataFilePath(filePath) {}
 
     uint32_t normalizeScalarScore(uint32_t obtainedScore, uint32_t maxScore) {
-        uint32_t normalizedScore = (static_cast<double>(obtainedScore) / maxScore) * scalingFactor;
+        if (obtainedScore != obtainedScore) {
+            return 0;
+        }
+        if ((maxScore != 0 && maxScore == maxScore) && (obtainedScore <= maxScore)) {
+            uint32_t normalizedScore = (static_cast<double>(obtainedScore) / maxScore) * scalingFactor;
+        }
+        else {
+            std::cerr << "Obtained score <= Maximum score (!= 0)" << std::endl;
+        }
+
         return static_cast<uint32_t>(normalizedScore);
     }
 
