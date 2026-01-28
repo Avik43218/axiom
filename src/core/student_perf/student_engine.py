@@ -15,17 +15,13 @@ appropriate and unbiased analysis of the student at grassroot level
 outliers, which is essential for estimating student potential
 
 
-The inner workings of this engine involves two major steps, which are as follows:
+The inner workings of this engine is dependent on the Preprocessor Engine, whose job 
+is to fetch raw data in CSV format, clean the data, normalize the scores, and insert
+the data in an SQL database.
 
-1. Since marks records are often messy and inconsistent, the first step is to clean
-them and normalize the scores. This is achieved by checking first whether marks obtained
-are strictly lesser than or equal to maximum marks or not, or whether there is any 
-NaN value or not, after which the marks are normalized on a scale of 10, using the
-formula:
+The core mechanism of this engine involves one major step:
 
-        (obtained_score / maximum_score) * 10.0
-
-2. The next step involves, using the normalized scores to compute some of the most
+1. This step involves, using the normalized scores to compute some of the most
 widely used statistical parameters such as mean, median, and standard deviation
 to name a few.
 
@@ -40,12 +36,9 @@ from abc import ABC, abstractmethod
 
 class StudentPerformanceComputeEngine(ABC):
 
-    def __init__(self, testScores: list, maxScores: list):
+    def __init__(self, normalizedTestScores: list):
         self.name = "Basic Compute Engine"
-        self.testScores = testScores
-        self.maxScores = maxScores
         
-        normalizedTestScores = np.array(self._normalizeAllScores())
         self.normalizedTestScores = normalizedTestScores
         self.maximumScore = np.max(normalizedTestScores)
         self.minimumScore = np.min(normalizedTestScores)
@@ -53,27 +46,6 @@ class StudentPerformanceComputeEngine(ABC):
     @abstractmethod
     def _engineDescription(self) -> str:
         return "Base: Basic compute engine"
-
-    @staticmethod
-    def _normalizeScore(maxScore: int, obtainedScore: int) -> float:
-        # Check for NaN, since NaN != NaN returns True
-        if obtainedScore != obtainedScore:
-            return 0.0
-
-        if (maxScore != 0 and maxScore == maxScore) and obtainedScore <= maxScore:
-            normalized = (obtainedScore / maxScore) * 10.0
-        else:
-            raise ValueError("Obtained score <= Maximum score (!= 0)")
-
-        return normalized
-    
-    def _normalizeAllScores(self) -> list:
-        normalizedTestScores = []
-        for score, maxScore in zip(self.testScores, self.maxScores):
-            normalizedScore = self._normalizeScore(maxScore, score)
-            normalizedTestScores.append(normalizedScore)
-
-        return normalizedTestScores
     
     def _calculateMean(self) -> float:
         mean = np.mean(self.normalizedTestScores)
@@ -88,8 +60,8 @@ class StudentPerformanceComputeEngine(ABC):
 
 class ConsistencyComputeEngine(StudentPerformanceComputeEngine):
 
-    def __init__(self, testScores: list, maxScores: list):
-        super().__init__(testScores, maxScores)
+    def __init__(self, normalizedTestScores: list):
+        super().__init__(normalizedTestScores)
         self.name = "Consistency Compute Engine"
         self.ALPHA = 0.3
         self.BETA = 0.7
@@ -124,8 +96,8 @@ class ConsistencyComputeEngine(StudentPerformanceComputeEngine):
 
 class StatisticsComputeEngine(StudentPerformanceComputeEngine):
 
-    def __init__(self, testScores: list, maxScores: list):
-        super().__init__(testScores, maxScores)
+    def __init__(self, normalizedTestScores: list):
+        super().__init__(normalizedTestScores)
         self.name = "Statistics Compute Engine"
 
     def _engineDescription(self):
@@ -149,8 +121,8 @@ class StatisticsComputeEngine(StudentPerformanceComputeEngine):
             "min": self.minimumScore,
             "max": self.maximumScore
         }
-        percentileStats = self._calculatePercentiles()
-        combinedStats = coreStats | percentileStats
+        percentiles = self._calculatePercentiles()
+        combinedStats = coreStats | percentiles
 
         return combinedStats
     
@@ -159,8 +131,8 @@ class StatisticsComputeEngine(StudentPerformanceComputeEngine):
     
 class DistributionComputeEngine(StudentPerformanceComputeEngine):
 
-    def __init__(self, testScores: list, maxScores: list):
-        super().__init__(testScores, maxScores)
+    def __init__(self, normalizedTestScores: list):
+        super().__init__(normalizedTestScores)
         self.name = "Distribution Compute Engine"
         self.logarithmBase = 2
 
@@ -199,16 +171,15 @@ class DistributionComputeEngine(StudentPerformanceComputeEngine):
 
 class ComputeStudentPerformance:
 
-    def __init__(self, studentId: int, testScores: list, maxScores: list):
+    def __init__(self, studentId: int, normalizedTestScores: list):
         self.name = "Compute Engine Wrapper Class"
 
         self.studentId = studentId
-        self.testScores = testScores
-        self.maxScores = maxScores
+        self.normalizedTestScores = normalizedTestScores
 
-        self.consistencyScoresObj = ConsistencyComputeEngine(testScores, maxScores)
-        self.statisticsObj = StatisticsComputeEngine(testScores, maxScores)
-        self.distributionScoresObj = DistributionComputeEngine(testScores, maxScores)
+        self.consistencyScoresObj = ConsistencyComputeEngine(normalizedTestScores)
+        self.statisticsObj = StatisticsComputeEngine(normalizedTestScores)
+        self.distributionScoresObj = DistributionComputeEngine(normalizedTestScores)
 
     def compute(self) -> dict:
         consistencyScores = self.consistencyScoresObj.returnConsistencyScores()
