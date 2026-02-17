@@ -111,7 +111,4 @@ public:
 
         return results;
     }
-
-    
-    
 };
