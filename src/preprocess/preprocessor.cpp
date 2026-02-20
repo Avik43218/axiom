@@ -4,6 +4,7 @@
 #include <sstream>
 #include <unordered_map>
 #include <functional>
+#include <cstdlib>
 
 class PreprocessRawData {
 private:
@@ -13,6 +14,11 @@ private:
     struct ResultRow {
         std::string firstColumn;
         std::vector<uint32_t> normalizedScores;
+    };
+
+    struct DBConfig {
+        const char *db_host, *db_name, *db_passwd;
+        const int db_port = 33060;
     };
 
 public:
