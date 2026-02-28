@@ -1,12 +1,13 @@
-#include <cstddef>
-#include <cstdint>
 #include <string>
 #include <vector>
+#include <cstddef>
+#include <cstdint>
 #include <fstream>
 #include <sstream>
-#include <iostream>
-#include <unordered_map>
 #include <cstdlib>
+#include <iostream>
+#include <stdexcept>
+#include <unordered_map>
 #include <mysql-cppconn/mysqlx/xdevapi.h>
 
 class PreprocessRawData {
@@ -166,35 +167,55 @@ public:
         std::cout << "Created table: " << tableName << std::endl;
     }
 
-    int insertData(mysqlx::Session sess, const std::string& filename, const std::vector<std::string>& selectedHeaders, std::string tableName) {
+    int insertData(mysqlx::Session& sess, const std::string& filename, const std::vector<std::string>& selectedHeaders, const std::string tableName) {
 
         DBConfig config = parseIni(filename);
-        std::vector<ResultRow> cleanData = extractRows(filename, selectedHeaders);
+        std::vector<ResultRow> cleanedData = extractRows(filename, selectedHeaders);
 
         try {
             mysqlx::Schema schema = sess.getSchema(config.db_name);
 
             // Check if table exists or not before inserting data
-            std::vector<mysqlx::Table> tables = schema.getTables();
             bool exists = false;
-
-            for (auto &t : tables) {
-                if (t.getName() == tableName) {
-                    exists = true;
-                    break;
-                }
-            }
+            if (schema.getTable(tableName).existsInDatabase()) exists = true;
 
             if (exists) {
-                // Data entry code goes here
+                std::vector<std::string> headers;
+                headers.push_back("student_id");
+
+                for (auto &h : selectedHeaders) {
+                    headers.push_back(h);
+                }
+
+                auto table = schema.getTable(tableName);
+                auto ins = table.insert(headers);
+
+                for (const auto& row : cleanedData) {
+
+                    std::vector<mysqlx::Value> values;
+                    values.push_back(row.firstColumn);
+
+                    for (uint32_t score : row.normalizedScores) {
+                        values.push_back(score);
+                    }
+
+                    ins.values(values);
+                }
+
+                ins.execute();
+                std::cout << "Data insertion successful into " << tableName << std::endl;
+
             }
             else {
-                std::cerr << "Error: Table " << tableName << " does not exist" << std::endl;
-                return 1;
+                throw std::runtime_error("Table " + tableName + " does not exist");
             }
         }
         catch (const mysqlx::Error &err) {
             std::cerr << "Error: " << err.what() << std::endl;
+            return 1;
+        }
+        catch (const std::runtime_error &e) {
+            std::cerr << "Error: " << e.what() << std::endl;
             return 1;
         }
 
@@ -202,3 +223,14 @@ public:
     }
 
 };
+
+
+int main(int argc, char* argv[]) {
+
+    if (argc != 2) {
+        std::cerr << "Error: 2 arguments arequired, " << argc << " provided" << std::endl;
+        return 1;
+    }
+
+    
+}
