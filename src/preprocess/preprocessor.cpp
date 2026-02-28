@@ -1,3 +1,5 @@
+#include <exception>
+#include <memory>
 #include <string>
 #include <vector>
 #include <cstddef>
@@ -13,21 +15,20 @@
 class PreprocessRawData {
 private:
     const std::string& filename;
-    uint32_t scalingFactor = 1000000;
+    const uint32_t scalingFactor = 1000000;
 
     struct ResultRow {
         std::string firstColumn;
         std::vector<uint32_t> normalizedScores;
     };
 
+public:
     struct DBConfig {
         const char *db_host, *db_user, *db_name;
         const int port;
     };
 
-public:
-
-    PreprocessRawData(std::string filePath) : filename(filePath) {}
+    PreprocessRawData(const std::string& filePath) : filename(filePath) {}
 
     uint32_t normalizeScalarScore(double obtainedScore, double maxScore) {
         if (obtainedScore != obtainedScore || maxScore != maxScore) {
@@ -42,7 +43,7 @@ public:
         return static_cast<uint32_t>(normalized);
     }
 
-    std::vector<ResultRow> extractRows(const std::string& filename, const std::vector<std::string>& selectedHeaders) {
+    std::vector<ResultRow> extractRows(const std::vector<std::string>& selectedHeaders) {
 
         std::vector<ResultRow> results;
         std::ifstream file(filename);
@@ -119,12 +120,12 @@ public:
         return results;
     }
 
-    DBConfig parseIni(const std::string& filename) {
+    DBConfig parseIni(const std::string& configFile) {
 
         static std::string host, user, passwd, name;
         int port = 3306; // default fallback
 
-        std::ifstream file(filename);
+        std::ifstream file(configFile);
         std::string line;
 
         while (std::getline(file, line)) {
@@ -151,26 +152,34 @@ public:
         };
     }
 
-    void createRecordsTable(mysqlx::Session& sess, const std::vector<std::string>& selectedHeaders, std::string tableName) {
+    bool createRecordsTable(mysqlx::Session& sess, const std::vector<std::string>& selectedHeaders, const std::string tableName) {
 
-        std::string query = "CREATE TABLE IF NOT EXISTS " + tableName + "(";
-        query += "student_id VARCHAR(7) PRIMARY KEY";
-        for (size_t i = 0; i < selectedHeaders.size(); ++i) {
-            query += selectedHeaders[i] + " INT UNSIGNED";
-            if (i != selectedHeaders.size() - 1) {
-                query += ", ";
+        try {
+            std::string query = "CREATE TABLE IF NOT EXISTS " + tableName + "(";
+            query += "student_id VARCHAR(7) PRIMARY KEY, ";
+            for (size_t i = 0; i < selectedHeaders.size(); ++i) {
+                query += selectedHeaders[i] + " INT UNSIGNED";
+                if (i != selectedHeaders.size() - 1) {
+                    query += ", ";
+                }
             }
-        }
-        query += ")";
+            query += ")";
 
-        sess.sql(query).execute();
-        std::cout << "Created table: " << tableName << std::endl;
+            sess.sql(query).execute();
+            std::cout << "Created table: " << tableName << std::endl;
+
+            return true;
+        }
+        catch (const std::exception &e) {
+            return false;
+        }
+
     }
 
-    int insertData(mysqlx::Session& sess, const std::string& filename, const std::vector<std::string>& selectedHeaders, const std::string tableName) {
+    int insertData(mysqlx::Session& sess, const std::string& configFile, const std::vector<std::string>& selectedHeaders, const std::string tableName) {
 
-        DBConfig config = parseIni(filename);
-        std::vector<ResultRow> cleanedData = extractRows(filename, selectedHeaders);
+        DBConfig config = parseIni(configFile);
+        std::vector<ResultRow> cleanedData = extractRows(selectedHeaders);
 
         try {
             mysqlx::Schema schema = sess.getSchema(config.db_name);
@@ -225,12 +234,74 @@ public:
 };
 
 
+std::vector<std::string> returnSelectedHeaders(const std::string& headersFile) {
+
+    std::ifstream file(headersFile);
+    std::string line;
+
+    std::vector<std::string> selectedHeaders;
+
+    while (std::getline(file, line)) {
+        if (line.empty()) {
+            continue;
+        }
+
+        selectedHeaders.push_back(line);
+    }
+
+    return selectedHeaders;
+}
+
 int main(int argc, char* argv[]) {
 
-    if (argc != 2) {
-        std::cerr << "Error: 2 arguments arequired, " << argc << " provided" << std::endl;
+    if (argc != 6) {
+        std::cerr << "Error: 6 arguments arequired, " << argc << " provided" << std::endl;
         return 1;
     }
 
-    
+    std::string dbPasswd = argv[1];
+    std::string tableName = argv[2];
+    std::string csvFilePath = argv[3];
+    std::string configFilePath = argv[4];
+    std::string headersFilePath = argv[5];
+
+    PreprocessRawData engine(csvFilePath);
+
+    PreprocessRawData::DBConfig config = engine.parseIni(configFilePath);
+
+    std::unique_ptr<mysqlx::Session> session;
+
+    try {
+        session = std::make_unique<mysqlx::Session>(config.db_host, config.port, config.db_user, dbPasswd);
+        mysqlx::Schema schema = session->getSchema(config.db_name);
+
+        if (!schema.existsInDatabase()) {
+            std::string errMsg = "Schema " + static_cast<std::string>(config.db_name) + " does not exist";
+            throw std::runtime_error(errMsg);
+        }
+    }
+    catch (const mysqlx::Error &err) {
+        std::cerr << "Error: " << err.what() << std::endl;
+        return 1;
+    }
+    catch (const std::runtime_error &e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+        return 1;
+    }
+
+    std::vector<std::string> selectedHeaders = returnSelectedHeaders(headersFilePath);
+    bool isTableCreated = engine.createRecordsTable(*session, selectedHeaders, tableName);
+
+    if (isTableCreated) {
+
+        int insertionResult = engine.insertData(*session, configFilePath, selectedHeaders, tableName);
+        if (insertionResult == 0) {
+            return 0;
+        }
+
+        else {
+            std::cerr << "Data insertion failed" << std::endl;
+            return 1;
+        }
+    }
 }
