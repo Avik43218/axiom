@@ -1,4 +1,3 @@
-#include <exception>
 #include <memory>
 #include <string>
 #include <vector>
@@ -9,6 +8,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <stdexcept>
+#include <exception>
 #include <unordered_map>
 #include <mysql-cppconn/mysqlx/xdevapi.h>
 
