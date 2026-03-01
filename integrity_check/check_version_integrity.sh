@@ -42,6 +42,6 @@ elif [ "$DIFF_STATUS" -eq 1 ]; then
 
 else
     TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
-    echo "$TIMESTAMP | Git Error: A Git error occurred..."
+    echo "$TIMESTAMP | Git Error: A Git error occurred..." | tee -a "$VI_LOG_FILE"
 
 fi
