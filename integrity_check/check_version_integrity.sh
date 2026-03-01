@@ -10,10 +10,7 @@ DIFF_STATUS=$?
 
 VERSION_INTEGRITY="0"
 
-if [ ! -d "$LOG_DIR" ]; then
-    mkdir "$LOG_DIR"
-fi
-
+mkdir -p "$LOG_DIR"
 touch "$VI_LOG_FILE"
 
 if [ "$DIFF_STATUS" -eq 0 ]; then
