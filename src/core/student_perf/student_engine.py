@@ -30,6 +30,7 @@ which puts all of them at a singular place.
 """
 
 
+import json
 import numpy as np
 from scipy.stats import skew
 from abc import ABC, abstractmethod
@@ -181,7 +182,7 @@ class ComputeStudentPerformance:
         self.statisticsObj = StatisticsComputeEngine(normalizedTestScores)
         self.distributionScoresObj = DistributionComputeEngine(normalizedTestScores)
 
-    def compute(self) -> dict:
+    def compute(self) -> str:
         consistencyScores = self.consistencyScoresObj.returnConsistencyScores()
         statistics = self.statisticsObj.returnStatistics()
         distributionScores = self.distributionScoresObj.returnDistributionScores()
@@ -190,7 +191,7 @@ class ComputeStudentPerformance:
 
         allScores = studentId | consistencyScores | statistics | distributionScores
 
-        return allScores
+        return json.dumps(allScores)
     
     def __repr__(self):
         return f"{self.__class__.__name__}: {self.name}"
