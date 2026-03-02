@@ -186,7 +186,9 @@ class ComputeStudentPerformance:
         statistics = self.statisticsObj.returnStatistics()
         distributionScores = self.distributionScoresObj.returnDistributionScores()
 
-        allScores = consistencyScores | statistics | distributionScores
+        studentId = {"studentId": self.studentId}
+
+        allScores = studentId | consistencyScores | statistics | distributionScores
 
         return allScores
     
