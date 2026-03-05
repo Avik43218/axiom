@@ -1,4 +1,4 @@
-# Axiom - Performance Metrics Analysis System
+# Axiom - Performance Metrics Computation System
 
 ## Introduction
 
