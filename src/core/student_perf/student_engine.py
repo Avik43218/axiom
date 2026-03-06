@@ -103,6 +103,10 @@ class StatisticsComputeEngine(StudentPerformanceComputeEngine):
 
     def _engineDescription(self):
         return "Sub: Statistics Compute Engine"
+
+    def _calculateTotalScore(self) -> float:
+        total = np.sum(self.normalizedTestScores)
+        return total
     
     def _checkSkewness(self) -> float:
         skewness = skew(self.normalizedTestScores)
@@ -117,6 +121,7 @@ class StatisticsComputeEngine(StudentPerformanceComputeEngine):
     
     def returnStatistics(self) -> dict:
         coreStats = {
+            "total": self._calculateTotalScore(),
             "mean": self._calculateMean(),
             "skewness": self._checkSkewness(),
             "min": self.minimumScore,
