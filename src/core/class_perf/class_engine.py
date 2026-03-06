@@ -31,8 +31,8 @@ class MetricsOrganizerEngine(ClassPerformanceComputeEngine):
     def organizeMetrics(self) -> dict:
 
         metricNames = [
-            "consistency", "mad", "mean", "skewness",
-            "min", "max", "q1", "median", "q3",
+            "studentId", "consistency", "mad", "mean", "skewness",
+            "total", "min", "max", "q1", "median", "q3",
             "entropy", "cv", "range", "std"
         ]
 
@@ -44,3 +44,36 @@ class MetricsOrganizerEngine(ClassPerformanceComputeEngine):
 
         return {name: np.array(values) for name, values in metrics.items()}
 
+
+class StudentRankingComputeEngine(ClassPerformanceComputeEngine):
+
+    def __init__(self, allStudentsScoresJSON: str, groupedMetrics: dict):
+        super().__init__(allStudentsScoresJSON)
+        self.name = "Student Ranking Compute Engine"
+        self.groupedMetrics = groupedMetrics
+
+    def _engineDescription(self) -> str:
+        return "Sub: Sub-engine for computing percentile and ranking of students in a class"
+
+    def _computeZScoresStd(self):
+
+        stdScores = self.groupedMetrics["std"]
+
+        M = np.mean(stdScores)
+        S = np.std(stdScores)
+
+        ZScoresStd = (stdScores - M) / S
+
+        return ZScoresStd
+
+    def _computeRankings(self) -> list:
+
+        stdScores = self.groupedMetrics["std"]
+        totalScores = self.groupedMetrics["total"]
+
+        indices = np.lexsort((stdScores, -totalScores))
+
+        ranks = np.empty_like(indices)
+        ranks[indices] = np.arange(1, len(indices) + 1)
+
+        return list(ranks)
