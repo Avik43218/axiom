@@ -178,7 +178,7 @@ class DistributionComputeEngine(StudentPerformanceComputeEngine):
 class ComputeStudentPerformance:
 
     def __init__(self, studentId: str, normalizedTestScores: list):
-        self.name = "Compute Engine Wrapper Class"
+        self.name = "Student Performance Compute Engine Wrapper Class"
 
         self.studentId = studentId
         self.normalizedTestScores = normalizedTestScores
