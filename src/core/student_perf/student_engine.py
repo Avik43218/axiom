@@ -183,9 +183,9 @@ class ComputeStudentPerformance:
         self.studentId = studentId
         self.normalizedTestScores = normalizedTestScores
 
-        self.consistencyScoresObj = ConsistencyComputeEngine(normalizedTestScores)
-        self.statisticsObj = StatisticsComputeEngine(normalizedTestScores)
-        self.distributionScoresObj = DistributionComputeEngine(normalizedTestScores)
+        self.consistencyScoresObj = ConsistencyComputeEngine(self.normalizedTestScores)
+        self.statisticsObj = StatisticsComputeEngine(self.normalizedTestScores)
+        self.distributionScoresObj = DistributionComputeEngine(self.normalizedTestScores)
 
     def compute(self) -> str:
         consistencyScores = self.consistencyScoresObj.returnConsistencyScores()
