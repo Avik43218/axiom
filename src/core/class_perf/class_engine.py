@@ -25,7 +25,7 @@ class MetricsOrganizerEngine(ClassPerformanceComputeEngine):
         self.allStudentsScoresDict = dict(json.loads(allStudentsScoresJSON))
         self.numberOfStudents = len(self.allStudentsScoresDict)
 
-    def _engineDEscription() -> str:
+    def _engineDescription() -> str:
         return "Sub: Sub-class for organising students performance metrics"
 
     def organizeMetrics(self) -> dict:
@@ -53,7 +53,7 @@ class StudentRankingComputeEngine(ClassPerformanceComputeEngine):
     def __init__(self, allStudentsScoresJSON: str, groupMetrics: dict):
         super().__init__(allStudentsScoresJSON)
         self.name = "Student Ranking Compute Engine"
-        self.groupedMetrics = groupMetrics
+        self.groupMetrics = groupMetrics
 
     def _engineDescription(self) -> str:
         return "Sub: Sub-engine for computing percentile and ranking of students in a class"
@@ -91,10 +91,11 @@ class StudentRankingComputeEngine(ClassPerformanceComputeEngine):
         return list(percentiles)
 
     def returnRankingMetrics(self) -> dict:
+        ranks = self._computeRankings()
         return {
             "zScoresStd": self._computeZScoresStd(),
-            "ranks": self._computeRankings(),
-            "percentiles": self._computeClassPercentiles()
+            "ranks": ranks,
+            "percentiles": self._computeClassPercentiles(ranks)
         }
 
     def __repr__(self):
