@@ -87,6 +87,7 @@ class StudentRankingComputeEngine(ClassPerformanceComputeEngine):
         ranks = np.array(ranks)
 
         percentiles = ((N - ranks + 1) / N) * 100
+        percentiles = np.round(percentiles)
 
         return list(percentiles)
 
