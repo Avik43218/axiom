@@ -1,4 +1,8 @@
+# Dot directories
 .env
 .venv/
 .vscode/
 .logs/
+
+# Files
+integrity_check/manifest.json
