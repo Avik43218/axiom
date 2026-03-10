@@ -4,7 +4,7 @@
 
 A modular, mathematically grounded system designed to analyze, normalize and transform raw student marks into comparable and workable performance metrics, and visualize the performance metrics for additional clarity and representation.
 
-The project is built as a **multi-engine analytical pipeline**, where each engine focuses on a specific level of insight: from idividual students to aggregate class behaviour to visualization.
+The project is built as a **multi-engine analytical pipeline**, where each engine focuses on a specific level of insight: from individual students to aggregate class behaviour to visualization.
 
 ## Architecture Breakdown
 
