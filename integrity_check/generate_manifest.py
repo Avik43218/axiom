@@ -38,7 +38,7 @@ def generateManifest(sourceDir: str):
 
     manifest["masterHash"] = hashlib.sha256(allHashes.encode()).hexdigest()
 
-    with open("manifest.json", "w") as manifestFile:
+    with open("../.manifest/manifest.json", "w") as manifestFile:
         json.dump(manifest, manifestFile, indent=4)
 
     print("Manifest created successfully!")
