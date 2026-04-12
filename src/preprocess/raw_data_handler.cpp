@@ -86,7 +86,7 @@ public:
             for (size_t i : selectedIndices) {
                 if (i == 0 || i >= row.size()) continue;
 
-                uint32_t obtained = static_cast<uint32_t>(std::stoul(row[i]));
+                double obtained = static_cast<double>(std::stod(row[i]));
                 result.rawScores.push_back(obtained);
             }
 
