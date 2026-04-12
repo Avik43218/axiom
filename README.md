@@ -6,6 +6,12 @@ A modular, mathematically grounded system designed to analyze, normalize and tra
 
 The project is built as a **multi-engine analytical pipeline**, where each engine focuses on a specific level of insight: from individual students to aggregate class behaviour to visualization.
 
+## Philosophy
+
+**"The foundation is the only source of truth."**
+
+The name "Axiom" is chosen due the **zero-trust** policy this project is built on. Just as an **axiom** is always true, the data, which is the foundation, should always be true.
+
 ## Architecture Breakdown
 
 ### 1. Data Preprocessor Engine
