@@ -210,3 +210,75 @@ public:
     }
 };
 
+std::vector<std::string> returnSelectedHeaders(const std::string& headersFile) {
+
+    std::ifstream file(headersFile);
+    std::string line;
+
+    std::vector<std::string> selectedHeaders;
+
+    while (std::getline(file, line)) {
+        if (line.empty()) {
+            continue;
+        }
+
+        selectedHeaders.push_back(line);
+    }
+
+    return selectedHeaders;
+}
+
+int main(int argc, char* argv[]) {
+
+    if (argc != 6) {
+        std::cerr << "Error: 6 arguments arequired, " << argc << " provided" << std::endl;
+        return 1;
+    }
+
+    std::string dbPasswd = argv[1];
+    std::string tableName = argv[2];
+    std::string parentTableName = argv[3];
+    std::string csvFilePath = argv[4];
+    std::string configFilePath = argv[5];
+    std::string headersFilePath = argv[6];
+
+    RawDataHandler engine(csvFilePath);
+
+    RawDataHandler::DBConfig config = engine.parseIni(configFilePath);
+
+    std::unique_ptr<mysqlx::Session> session;
+
+    try {
+        session = std::make_unique<mysqlx::Session>(config.db_host, config.port, config.db_user, dbPasswd);
+        mysqlx::Schema schema = session->getSchema(config.db_name);
+
+        if (!schema.existsInDatabase()) {
+            std::string errMsg = "Schema " + static_cast<std::string>(config.db_name) + " does not exist";
+            throw std::runtime_error(errMsg);
+        }
+    }
+    catch (const mysqlx::Error &err) {
+        std::cerr << "Error: " << err.what() << std::endl;
+        return 1;
+    }
+    catch (const std::runtime_error &e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+        return 1;
+    }
+
+    std::vector<std::string> selectedHeaders = returnSelectedHeaders(headersFilePath);
+    bool isTableCreated = engine.createRecordsTable(*session, selectedHeaders, tableName, parentTableName);
+
+    if (isTableCreated) {
+
+        int insertionResult = engine.insertData(*session, configFilePath, selectedHeaders, tableName);
+        if (insertionResult == 0) {
+            return 0;
+        }
+
+        else {
+            std::cerr << "Data insertion failed" << std::endl;
+            return 1;
+        }
+    }
+}
